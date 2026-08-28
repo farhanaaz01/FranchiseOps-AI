@@ -1,0 +1,9 @@
+item_id,item_name,category,unit,supplier_id,unit_cost
+ITEM001,Milk,Dairy,litres,SUP001,60
+ITEM002,Bread,Bakery,loaves,SUP002,40
+ITEM003,Eggs,Dairy,pieces,SUP001,8
+ITEM004,Butter,Dairy,kg,SUP001,450
+ITEM005,Sugar,Grocery,kg,SUP003,45
+ITEM006,Flour,Grocery,kg,SUP003,35
+ITEM007,Cooking Oil,Grocery,litres,SUP004,180
+ITEM008,Tomatoes,Vegetables,kg,SUP005,60
