@@ -5,7 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import Base, engine
-from app.routers import dashboard, franchise, outlet, sale
+from app.routers import (
+    dashboard,
+    franchise,
+    inventory,
+    inventory_dashboard,
+    inventory_transaction,
+    outlet,
+    product,
+    sale,
+)
 from app.seed import seed_data
 
 
@@ -35,7 +44,11 @@ app.add_middleware(
 app.include_router(franchise.router)
 app.include_router(outlet.router)
 app.include_router(sale.router)
+app.include_router(product.router)
+app.include_router(inventory.router)
+app.include_router(inventory_transaction.router)
 app.include_router(dashboard.router)
+app.include_router(inventory_dashboard.router)
 
 
 @app.get("/")
