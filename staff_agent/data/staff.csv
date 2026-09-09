@@ -1,0 +1,11 @@
+staff_id,staff_name,outlet_id,role,department,employment_status,joining_date
+S001,Rahul Sharma,OUT001,Cashier,Frontend,Active,2023-01-15
+S002,Priya Patel,OUT001,Cleaner,Facilities,Active,2023-02-01
+S003,Amit Singh,OUT001,Manager,Management,Active,2022-11-01
+S004,Neha Gupta,OUT002,Cashier,Frontend,Active,2023-03-15
+S005,Vikram Reddy,OUT002,Cook,Kitchen,Active,2023-01-20
+S006,Deepa Nair,OUT003,Cashier,Frontend,Active,2023-04-01
+S007,Ravi Kumar,OUT003,Cleaner,Facilities,Active,2023-02-15
+S008,Sneha Menon,OUT003,Manager,Management,Active,2022-12-01
+S009,Arjun Das,OUT004,Cook,Kitchen,Active,2023-01-10
+S010,Meera Iyer,OUT004,Cashier,Frontend,Active,2023-03-01
