@@ -255,3 +255,180 @@ class InventoryDashboardDTO(BaseModel):
     total_wastage_30_days: Decimal
     top_alerts: List[StockAlertDTO]
     replenishment_recommendations: List[ReplenishmentRecommendationDTO]
+
+
+# ------------------- Milestone 3: Workforce & Marketing Schemas -------------------
+
+class EmployeeBase(BaseModel):
+    outlet_id: int
+    full_name: str
+    role: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    hourly_rate: Optional[Decimal] = Decimal("0.00")
+    hire_date: Optional[date] = None
+    status: Optional[str] = "Active"
+
+
+class EmployeeCreate(EmployeeBase):
+    pass
+
+
+class EmployeeResponse(EmployeeBase):
+    model_config = ConfigDict(from_attributes=True)
+    employee_id: int
+
+
+class AttendanceBase(BaseModel):
+    employee_id: int
+    attendance_date: date
+    status: str  # PRESENT, ABSENT, LATE, HALF_DAY
+    hours_worked: Optional[Decimal] = Decimal("0.00")
+    notes: Optional[str] = None
+
+
+class AttendanceCreate(AttendanceBase):
+    pass
+
+
+class AttendanceResponse(AttendanceBase):
+    model_config = ConfigDict(from_attributes=True)
+    attendance_id: int
+
+
+class ScheduleBase(BaseModel):
+    employee_id: int
+    schedule_date: date
+    shift_start: Optional[str] = None
+    shift_end: Optional[str] = None
+    status: Optional[str] = "SCHEDULED"
+
+
+class ScheduleCreate(ScheduleBase):
+    pass
+
+
+class ScheduleResponse(ScheduleBase):
+    model_config = ConfigDict(from_attributes=True)
+    schedule_id: int
+
+
+class MarketingCampaignBase(BaseModel):
+    outlet_id: int
+    campaign_name: str
+    campaign_type: Optional[str] = None
+    start_date: date
+    end_date: date
+    budget: Optional[Decimal] = Decimal("0.00")
+    status: Optional[str] = "Active"
+
+
+class MarketingCampaignCreate(MarketingCampaignBase):
+    pass
+
+
+class MarketingCampaignResponse(MarketingCampaignBase):
+    model_config = ConfigDict(from_attributes=True)
+    campaign_id: int
+
+
+class CampaignPerformanceBase(BaseModel):
+    campaign_id: int
+    performance_date: date
+    impressions: Optional[int] = 0
+    clicks: Optional[int] = 0
+    conversions: Optional[int] = 0
+    engagement_score: Optional[Decimal] = Decimal("0.00")
+    revenue: Optional[Decimal] = Decimal("0.00")
+
+
+class CampaignPerformanceCreate(CampaignPerformanceBase):
+    pass
+
+
+class CampaignPerformanceResponse(CampaignPerformanceBase):
+    model_config = ConfigDict(from_attributes=True)
+    performance_id: int
+
+
+class EmployeePerformanceDTO(BaseModel):
+    employee_id: int
+    full_name: str
+    outlet_id: int
+    outlet_name: Optional[str] = None
+    role: Optional[str] = None
+    total_days: int
+    present_days: int
+    absent_days: int
+    late_days: int
+    half_day_days: int
+    attendance_rate: Decimal
+    total_hours_worked: Decimal
+    average_hours_per_day: Decimal
+    productivity_score: Decimal  # 0-100
+    performance_label: str
+
+
+class OutletWorkforceDTO(BaseModel):
+    outlet_id: int
+    outlet_name: Optional[str] = None
+    total_employees: int
+    active_employees: int
+    average_attendance_rate: Decimal
+    total_hours_worked: Decimal
+    staffing_shortage_count: int
+    employee_performances: List[EmployeePerformanceDTO]
+
+
+class StaffingAlertDTO(BaseModel):
+    outlet_id: int
+    outlet_name: Optional[str] = None
+    alert_type: str  # SHORTAGE, OVERSTAFFED
+    scheduled_staff_count: int
+    expected_staff_count: int
+    message: str
+
+
+class WorkforceDashboardDTO(BaseModel):
+    total_employees: int
+    active_employees: int
+    total_outlets_with_employees: int
+    average_attendance_rate: Decimal
+    total_hours_worked: Decimal
+    top_performers: List[EmployeePerformanceDTO]
+    underperformers: List[EmployeePerformanceDTO]
+    staffing_alerts: List[StaffingAlertDTO]
+
+
+class CampaignAnalyticsDTO(BaseModel):
+    campaign_id: int
+    campaign_name: str
+    outlet_id: int
+    outlet_name: Optional[str] = None
+    campaign_type: Optional[str] = None
+    start_date: date
+    end_date: date
+    budget: Decimal
+    total_revenue: Decimal
+    total_impressions: int
+    total_clicks: int
+    total_conversions: int
+    average_engagement_score: Decimal
+    roi_percentage: Decimal
+    engagement_rate: Decimal  # clicks / impressions
+    conversion_rate: Decimal  # conversions / clicks
+    status: str
+    performance_label: str
+
+
+class MarketingDashboardDTO(BaseModel):
+    total_campaigns: int
+    active_campaigns: int
+    total_budget: Decimal
+    total_revenue: Decimal
+    overall_roi_percentage: Decimal
+    average_engagement_rate: Decimal
+    average_conversion_rate: Decimal
+    top_campaigns: List[CampaignAnalyticsDTO]
+    underperforming_campaigns: List[CampaignAnalyticsDTO]
+    campaigns_by_type: dict[str, int]

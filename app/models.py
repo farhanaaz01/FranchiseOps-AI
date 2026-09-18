@@ -95,3 +95,80 @@ class PurchaseOrder(Base):
 
     outlet = relationship("Outlet")
     product = relationship("Product")
+
+
+# ------------------- Milestone 3: Workforce & Marketing -------------------
+
+class Employee(Base):
+    __tablename__ = "employees"
+
+    employee_id = Column(Integer, primary_key=True, index=True)
+    outlet_id = Column(Integer, ForeignKey("outlets.outlet_id"), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    role = Column(String(100))  # Manager, Cashier, Chef, Waiter, etc.
+    email = Column(String(255))
+    phone = Column(String(50))
+    hourly_rate = Column(Numeric(10, 2))
+    hire_date = Column(Date)
+    status = Column(String(50))  # Active, Inactive, On Leave
+
+    outlet = relationship("Outlet")
+    attendances = relationship("Attendance", back_populates="employee", lazy="selectin")
+    schedules = relationship("Schedule", back_populates="employee", lazy="selectin")
+
+
+class Attendance(Base):
+    __tablename__ = "attendance"
+
+    attendance_id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)
+    attendance_date = Column(Date, nullable=False)
+    status = Column(String(50))  # PRESENT, ABSENT, LATE, HALF_DAY
+    hours_worked = Column(Numeric(5, 2))
+    notes = Column(String(255))
+
+    employee = relationship("Employee", back_populates="attendances")
+
+
+class Schedule(Base):
+    __tablename__ = "schedules"
+
+    schedule_id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)
+    schedule_date = Column(Date, nullable=False)
+    shift_start = Column(String(10))  # HH:MM
+    shift_end = Column(String(10))    # HH:MM
+    status = Column(String(50))  # SCHEDULED, COMPLETED, CANCELLED
+
+    employee = relationship("Employee", back_populates="schedules")
+
+
+class MarketingCampaign(Base):
+    __tablename__ = "marketing_campaigns"
+
+    campaign_id = Column(Integer, primary_key=True, index=True)
+    outlet_id = Column(Integer, ForeignKey("outlets.outlet_id"), nullable=False)
+    campaign_name = Column(String(255), nullable=False)
+    campaign_type = Column(String(100))  # Social Media, Email, Discount, Billboard
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    budget = Column(Numeric(12, 2))
+    status = Column(String(50))  # Active, Completed, Cancelled, Planned
+
+    outlet = relationship("Outlet")
+    performances = relationship("CampaignPerformance", back_populates="campaign", lazy="selectin")
+
+
+class CampaignPerformance(Base):
+    __tablename__ = "campaign_performance"
+
+    performance_id = Column(Integer, primary_key=True, index=True)
+    campaign_id = Column(Integer, ForeignKey("marketing_campaigns.campaign_id"), nullable=False)
+    performance_date = Column(Date, nullable=False)
+    impressions = Column(Integer, default=0)
+    clicks = Column(Integer, default=0)
+    conversions = Column(Integer, default=0)
+    engagement_score = Column(Numeric(5, 2))  # 0-100
+    revenue = Column(Numeric(12, 2), default=0)
+
+    campaign = relationship("MarketingCampaign", back_populates="performances")

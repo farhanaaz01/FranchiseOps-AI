@@ -3,7 +3,19 @@ from decimal import Decimal, ROUND_HALF_UP
 from random import Random
 
 from app.database import SessionLocal
-from app.models import Franchise, Outlet, Sale, Product, Inventory, InventoryTransaction
+from app.models import (
+    Attendance,
+    CampaignPerformance,
+    Employee,
+    Franchise,
+    Inventory,
+    InventoryTransaction,
+    MarketingCampaign,
+    Outlet,
+    Product,
+    Sale,
+    Schedule,
+)
 
 
 def seed_data():
@@ -36,6 +48,8 @@ def seed_data():
         _seed_outlet_sales(db, outlet4, 30, Decimal("500"), Decimal("150"))
 
         _seed_inventory(db, [outlet1, outlet2, outlet3, outlet4])
+        _seed_workforce(db, [outlet1, outlet2, outlet3, outlet4])
+        _seed_marketing(db, [outlet1, outlet2, outlet3, outlet4])
     finally:
         db.close()
 
@@ -181,4 +195,190 @@ def _add_transaction(db, inventory, transaction_date, transaction_type, quantity
         reason=reason,
     )
     db.add(transaction)
+    db.commit()
+
+
+def _seed_workforce(db, outlets):
+    today = date.today()
+    roles = ["Manager", "Cashier", "Chef", "Waiter", "Kitchen Staff", "Cleaner"]
+    names = [
+        ("Amit Sharma", "Manager"),
+        ("Priya Patel", "Cashier"),
+        ("Rahul Kumar", "Chef"),
+        ("Sneha Gupta", "Waiter"),
+        ("Vikram Singh", "Kitchen Staff"),
+        ("Neha Verma", "Cashier"),
+        ("Arjun Reddy", "Chef"),
+        ("Divya Iyer", "Waiter"),
+        ("Karan Mehta", "Cleaner"),
+        ("Pooja Nair", "Manager"),
+    ]
+
+    random = Random(123)
+
+    employees = []
+    for outlet in outlets:
+        # Skip inactive outlet partially
+        staff_count = 3 if outlet.status == "Inactive" else 5 + random.randint(0, 3)
+        for i in range(staff_count):
+            name, role = names[(outlet.outlet_id + i) % len(names)]
+            if outlet.status == "Inactive":
+                emp_status = random.choice(["Inactive", "On Leave"])
+            else:
+                emp_status = random.choice(["Active", "Active", "Active", "On Leave"])
+
+            employee = Employee(
+                outlet_id=outlet.outlet_id,
+                full_name=f"{name} ({outlet.outlet_name})",
+                role=role if i > 0 else "Manager",
+                email=f"employee{outlet.outlet_id}{i}@franchiseops.ai",
+                phone=f"98765{outlet.outlet_id}{i:03d}",
+                hourly_rate=Decimal(str(100 + random.randint(20, 150))),
+                hire_date=today - timedelta(days=random.randint(30, 500)),
+                status=emp_status,
+            )
+            db.add(employee)
+            db.commit()
+            db.refresh(employee)
+            employees.append(employee)
+
+            _seed_attendance(db, employee, today, random)
+            _seed_schedules(db, employee, today, random)
+
+    db.commit()
+
+
+def _seed_attendance(db, employee, today, random):
+    statuses = ["PRESENT", "PRESENT", "PRESENT", "PRESENT", "PRESENT", "LATE", "ABSENT", "HALF_DAY"]
+    for i in range(30):
+        attendance_date = today - timedelta(days=29 - i)
+        status = random.choice(statuses)
+        if status == "PRESENT":
+            hours = Decimal(str(7.5 + random.random() * 1.0))
+        elif status == "LATE":
+            hours = Decimal(str(6.0 + random.random() * 1.0))
+        elif status == "HALF_DAY":
+            hours = Decimal("4.00")
+        else:
+            hours = Decimal("0.00")
+
+        attendance = Attendance(
+            employee_id=employee.employee_id,
+            attendance_date=attendance_date,
+            status=status,
+            hours_worked=hours.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            notes=None,
+        )
+        db.add(attendance)
+    db.commit()
+
+
+def _seed_schedules(db, employee, today, random):
+    if employee.status != "Active":
+        return
+
+    for i in range(14):
+        schedule_date = today - timedelta(days=7 - i)
+        if schedule_date < today:
+            schedule_status = random.choice(["COMPLETED", "COMPLETED", "CANCELLED"])
+        else:
+            schedule_status = "SCHEDULED"
+
+        start_hour = 8 + random.randint(0, 4)
+        shift_hours = 6 + random.randint(0, 4)
+        shift_start = f"{start_hour:02d}:00"
+        shift_end = f"{(start_hour + shift_hours) % 24:02d}:00"
+
+        schedule = Schedule(
+            employee_id=employee.employee_id,
+            schedule_date=schedule_date,
+            shift_start=shift_start,
+            shift_end=shift_end,
+            status=schedule_status,
+        )
+        db.add(schedule)
+    db.commit()
+
+
+def _seed_marketing(db, outlets):
+    today = date.today()
+    random = Random(456)
+
+    campaign_templates = [
+        ("Summer Burger Bonanza", "Discount", 5000),
+        ("Social Media Blast", "Social Media", 3000),
+        ("Weekend Family Combo", "Discount", 7000),
+        ("Email Newsletter Promo", "Email", 1500),
+        ("Festival Special", "Discount", 8000),
+        ("Local Billboard", "Billboard", 4000),
+        ("Loyalty Program", "Email", 2000),
+        ("New Menu Launch", "Social Media", 6000),
+    ]
+
+    for outlet in outlets:
+        # Inactive outlet gets fewer/older campaigns
+        num_campaigns = 1 if outlet.status == "Inactive" else random.randint(2, 4)
+        for i in range(num_campaigns):
+            template = campaign_templates[(outlet.outlet_id + i) % len(campaign_templates)]
+            start_offset = random.randint(-20, -5)
+            duration = random.randint(7, 21)
+            start_date = today + timedelta(days=start_offset)
+            end_date = start_date + timedelta(days=duration)
+            status = "Completed" if end_date < today else random.choice(["Active", "Completed", "Planned"])
+
+            campaign = MarketingCampaign(
+                outlet_id=outlet.outlet_id,
+                campaign_name=f"{template[0]} - {outlet.outlet_name}",
+                campaign_type=template[1],
+                start_date=start_date,
+                end_date=end_date,
+                budget=Decimal(str(template[2])),
+                status=status,
+            )
+            db.add(campaign)
+            db.commit()
+            db.refresh(campaign)
+
+            _seed_campaign_performance(db, campaign, start_date, end_date, template[1], random)
+
+    db.commit()
+
+
+def _seed_campaign_performance(db, campaign, start_date, end_date, campaign_type, random):
+    days = max(1, (end_date - start_date).days + 1)
+    total_budget = float(campaign.budget)
+
+    for i in range(days):
+        performance_date = start_date + timedelta(days=i)
+
+        # Different campaign types have different engagement patterns
+        if campaign_type == "Social Media":
+            base_impressions = random.randint(2000, 5000)
+            ctr = 0.03 + random.random() * 0.04
+        elif campaign_type == "Email":
+            base_impressions = random.randint(500, 1500)
+            ctr = 0.05 + random.random() * 0.10
+        elif campaign_type == "Discount":
+            base_impressions = random.randint(1000, 3000)
+            ctr = 0.02 + random.random() * 0.05
+        else:  # Billboard
+            base_impressions = random.randint(3000, 8000)
+            ctr = 0.005 + random.random() * 0.015
+
+        impressions = base_impressions
+        clicks = int(impressions * ctr)
+        conversions = int(clicks * (0.05 + random.random() * 0.15))
+        engagement_score = Decimal(str(min(100, ctr * 100 * 5 + random.random() * 20)))
+        revenue = Decimal(str(total_budget * 0.2 * (0.8 + random.random() * 0.6)))
+
+        performance = CampaignPerformance(
+            campaign_id=campaign.campaign_id,
+            performance_date=performance_date,
+            impressions=impressions,
+            clicks=clicks,
+            conversions=conversions,
+            engagement_score=engagement_score.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            revenue=revenue.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        )
+        db.add(performance)
     db.commit()
