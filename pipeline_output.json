@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-06T10:12:36.765420",
+  "generated_at": "2026-09-19T11:50:30.677411",
   "outlet_count": 5,
   "kpis": [
     {
@@ -132,48 +132,48 @@
         {
           "outlet_id": "OUT-01",
           "forecast_date": "2026-08-30",
-          "predicted_revenue": 8154.94,
+          "predicted_revenue": 8296.64,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-01",
           "forecast_date": "2026-08-31",
-          "predicted_revenue": 8952.06,
+          "predicted_revenue": 8728.08,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-01",
           "forecast_date": "2026-09-01",
-          "predicted_revenue": 8769.37,
+          "predicted_revenue": 8682.9,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-01",
           "forecast_date": "2026-09-02",
-          "predicted_revenue": 8182.8,
+          "predicted_revenue": 7980.32,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-01",
           "forecast_date": "2026-09-03",
-          "predicted_revenue": 8489.73,
+          "predicted_revenue": 8386.15,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-01",
           "forecast_date": "2026-09-04",
-          "predicted_revenue": 9222.06,
+          "predicted_revenue": 9162.94,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-01",
           "forecast_date": "2026-09-05",
-          "predicted_revenue": 9417.27,
+          "predicted_revenue": 9328.75,
           "model_version": "xgb-v1"
         }
       ],
       "trained_on_rows": 300,
-      "generated_at": "2026-09-06T10:12:36.744716"
+      "generated_at": "2026-09-19T11:50:30.622290"
     },
     {
       "outlet_id": "OUT-02",
@@ -181,48 +181,48 @@
         {
           "outlet_id": "OUT-02",
           "forecast_date": "2026-08-30",
-          "predicted_revenue": 3915.31,
+          "predicted_revenue": 3897.54,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-02",
           "forecast_date": "2026-08-31",
-          "predicted_revenue": 3485.04,
+          "predicted_revenue": 3702.61,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-02",
           "forecast_date": "2026-09-01",
-          "predicted_revenue": 3446.04,
+          "predicted_revenue": 3506.47,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-02",
           "forecast_date": "2026-09-02",
-          "predicted_revenue": 3306.9,
+          "predicted_revenue": 3442.72,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-02",
           "forecast_date": "2026-09-03",
-          "predicted_revenue": 3165.2,
+          "predicted_revenue": 3245.54,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-02",
           "forecast_date": "2026-09-04",
-          "predicted_revenue": 3636.3,
+          "predicted_revenue": 3678.19,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-02",
           "forecast_date": "2026-09-05",
-          "predicted_revenue": 3824.14,
+          "predicted_revenue": 3720.97,
           "model_version": "xgb-v1"
         }
       ],
       "trained_on_rows": 300,
-      "generated_at": "2026-09-06T10:12:36.745049"
+      "generated_at": "2026-09-19T11:50:30.623005"
     },
     {
       "outlet_id": "OUT-03",
@@ -230,48 +230,48 @@
         {
           "outlet_id": "OUT-03",
           "forecast_date": "2026-08-30",
-          "predicted_revenue": 5454.96,
+          "predicted_revenue": 5360.54,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-03",
           "forecast_date": "2026-08-31",
-          "predicted_revenue": 5524.31,
+          "predicted_revenue": 5493.43,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-03",
           "forecast_date": "2026-09-01",
-          "predicted_revenue": 5235.39,
+          "predicted_revenue": 5094.31,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-03",
           "forecast_date": "2026-09-02",
-          "predicted_revenue": 5314.13,
+          "predicted_revenue": 5017.92,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-03",
           "forecast_date": "2026-09-03",
-          "predicted_revenue": 5333.8,
+          "predicted_revenue": 5085.49,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-03",
           "forecast_date": "2026-09-04",
-          "predicted_revenue": 5896.35,
+          "predicted_revenue": 5917.93,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-03",
           "forecast_date": "2026-09-05",
-          "predicted_revenue": 6035.23,
+          "predicted_revenue": 6267.41,
           "model_version": "xgb-v1"
         }
       ],
       "trained_on_rows": 300,
-      "generated_at": "2026-09-06T10:12:36.745436"
+      "generated_at": "2026-09-19T11:50:30.623552"
     },
     {
       "outlet_id": "OUT-04",
@@ -279,48 +279,48 @@
         {
           "outlet_id": "OUT-04",
           "forecast_date": "2026-08-30",
-          "predicted_revenue": 7108.22,
+          "predicted_revenue": 7106.07,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-04",
           "forecast_date": "2026-08-31",
-          "predicted_revenue": 7316.39,
+          "predicted_revenue": 7247.57,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-04",
           "forecast_date": "2026-09-01",
-          "predicted_revenue": 7189.98,
+          "predicted_revenue": 7247.41,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-04",
           "forecast_date": "2026-09-02",
-          "predicted_revenue": 6471.04,
+          "predicted_revenue": 6565.18,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-04",
           "forecast_date": "2026-09-03",
-          "predicted_revenue": 7136.49,
+          "predicted_revenue": 7175.68,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-04",
           "forecast_date": "2026-09-04",
-          "predicted_revenue": 8155.59,
+          "predicted_revenue": 8251.27,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-04",
           "forecast_date": "2026-09-05",
-          "predicted_revenue": 8284.74,
+          "predicted_revenue": 8202.45,
           "model_version": "xgb-v1"
         }
       ],
       "trained_on_rows": 300,
-      "generated_at": "2026-09-06T10:12:36.745741"
+      "generated_at": "2026-09-19T11:50:30.624289"
     },
     {
       "outlet_id": "OUT-05",
@@ -328,48 +328,48 @@
         {
           "outlet_id": "OUT-05",
           "forecast_date": "2026-08-30",
-          "predicted_revenue": 5504.12,
+          "predicted_revenue": 5492.77,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-05",
           "forecast_date": "2026-08-31",
-          "predicted_revenue": 4957.72,
+          "predicted_revenue": 5140.5,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-05",
           "forecast_date": "2026-09-01",
-          "predicted_revenue": 5197.33,
+          "predicted_revenue": 5164.97,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-05",
           "forecast_date": "2026-09-02",
-          "predicted_revenue": 5220.74,
+          "predicted_revenue": 5184.49,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-05",
           "forecast_date": "2026-09-03",
-          "predicted_revenue": 4996.85,
+          "predicted_revenue": 4888.9,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-05",
           "forecast_date": "2026-09-04",
-          "predicted_revenue": 6160.2,
+          "predicted_revenue": 5912.01,
           "model_version": "xgb-v1"
         },
         {
           "outlet_id": "OUT-05",
           "forecast_date": "2026-09-05",
-          "predicted_revenue": 5899.27,
+          "predicted_revenue": 5869.54,
           "model_version": "xgb-v1"
         }
       ],
       "trained_on_rows": 300,
-      "generated_at": "2026-09-06T10:12:36.746044"
+      "generated_at": "2026-09-19T11:50:30.624886"
     }
   ],
   "risk_predictions": [
