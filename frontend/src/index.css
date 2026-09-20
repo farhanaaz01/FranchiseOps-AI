@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN TOKENS — FranchiseOps AI Enterprise Dark Theme
+   Matches the existing dashboard_template.html design system
+   ============================================================ */
+:root {
+  /* Background layers */
+  --bg: #0E1013;
+  --panel: #171A20;
+  --panel-alt: #1D212A;
+  --panel-hover: #222733;
+
+  /* Borders */
+  --hairline: #262B35;
+  --border-focus: #6C8CFF;
+
+  /* Text */
+  --text: #EDEFF3;
+  --text-dim: #8992A6;
+  --text-faint: #5C6478;
+
+  /* Status colors */
+  --healthy: #4FAE7C;
+  --healthy-bg: rgba(79, 174, 124, 0.12);
+  --healthy-border: rgba(79, 174, 124, 0.25);
+
+  --risk: #E8A33D;
+  --risk-bg: rgba(232, 163, 61, 0.12);
+  --risk-border: rgba(232, 163, 61, 0.25);
+
+  --critical: #D0555A;
+  --critical-bg: rgba(208, 85, 90, 0.14);
+  --critical-border: rgba(208, 85, 90, 0.25);
+
+  --accent: #6C8CFF;
+  --accent-bg: rgba(108, 140, 255, 0.12);
+  --accent-border: rgba(108, 140, 255, 0.25);
+
+  /* Chart palette */
+  --chart-1: #6C8CFF;
+  --chart-2: #4FAE7C;
+  --chart-3: #E8A33D;
+  --chart-4: #D0555A;
+  --chart-5: #9D7AFF;
+  --chart-grid: rgba(38, 43, 53, 0.8);
+
+  /* Sidebar */
+  --sidebar-width: 240px;
+  --topnav-height: 56px;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #262B35;
+  --scrollbar-track: #0E1013;
+}
+
+/* ============================================================
+   BASE RESETS
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3A4155;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code, pre, .font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ============================================================
+   SELECTION
+   ============================================================ */
+::selection {
+  background: rgba(108, 140, 255, 0.2);
+  color: var(--text);
+}
+
+/* ============================================================
+   TAILWIND LAYER COMPONENTS — Utility Classes
+   ============================================================ */
+@layer components {
+  /* Card base */
+  .card {
+    @apply bg-[#171A20] border border-[#262B35] rounded-[12px] p-5;
+  }
+
+  .card-panel {
+    @apply bg-[#1D212A] border border-[#262B35] rounded-[12px] p-5;
+  }
+
+  /* Status pill */
+  .status-healthy {
+    background: var(--healthy-bg);
+    color: var(--healthy);
+    border: 1px solid var(--healthy-border);
+  }
+
+  .status-risk {
+    background: var(--risk-bg);
+    color: var(--risk);
+    border: 1px solid var(--risk-border);
+  }
+
+  .status-critical {
+    background: var(--critical-bg);
+    color: var(--critical);
+    border: 1px solid var(--critical-border);
+  }
+
+  .status-info {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+  }
+
+  /* Nav item */
+  .nav-item {
+    @apply flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-[#8992A6] cursor-pointer transition-all duration-150;
+  }
+
+  .nav-item:hover {
+    @apply bg-[#1D212A] text-[#EDEFF3];
+  }
+
+  .nav-item.active {
+    @apply bg-[#1D212A] text-[#EDEFF3];
+    border-left: 2px solid var(--accent);
+  }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply outline-none ring-2 ring-[#6C8CFF] ring-offset-2 ring-offset-[#0E1013];
+  }
+}
+
+/* ============================================================
+   RECHARTS CUSTOM STYLES
+   ============================================================ */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--panel-alt) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 8px !important;
+  color: var(--text) !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--hairline) !important;
+}
+
+.recharts-text {
+  fill: var(--text-faint) !important;
+  font-size: 11px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ============================================================
+   LOADING SHIMMER ANIMATION
+   ============================================================ */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--panel) 25%,
+    var(--panel-alt) 50%,
+    var(--panel) 75%
+  );
+  background-size: 200% auto;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   TRANSITION UTILITIES
+   ============================================================ */
+.transition-card {
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.transition-card:hover {
+  border-color: #3A4155;
+}
+
+/* ============================================================
+   FADE IN ANIMATION
+   ============================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 200ms ease-out forwards;
+}
