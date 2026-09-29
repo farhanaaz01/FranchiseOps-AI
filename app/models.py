@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Date, Numeric
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Date, Numeric, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -172,3 +172,95 @@ class CampaignPerformance(Base):
     revenue = Column(Numeric(12, 2), default=0)
 
     campaign = relationship("MarketingCampaign", back_populates="performances")
+
+
+# ------------------- Milestone 4: Audit, Intelligence, Notifications -------------------
+
+
+class AuditComplianceRecord(Base):
+    """Time-series compliance snapshots feeding the intelligence pipeline."""
+
+    __tablename__ = "audit_compliance_records"
+
+    record_id = Column(Integer, primary_key=True, index=True)
+    outlet_id = Column(Integer, ForeignKey("outlets.outlet_id"), nullable=False)
+    record_date = Column(Date, nullable=False)
+    compliance_score = Column(Numeric(5, 2), nullable=False)
+    violation_count = Column(Integer, default=0)
+
+    outlet = relationship("Outlet")
+
+
+class AuditInspection(Base):
+    """Manual health / compliance inspections (Audit Agent CRUD)."""
+
+    __tablename__ = "audit_inspections"
+
+    audit_id = Column(Integer, primary_key=True, index=True)
+    outlet_id = Column(Integer, ForeignKey("outlets.outlet_id"), nullable=False)
+    inspection_date = Column(Date, nullable=False)
+    auditor_name = Column(String(255), nullable=False)
+    score = Column(Numeric(5, 2), nullable=False)
+    status = Column(String(50), nullable=False)  # Passed, Warning, Failed
+    critical_violations = Column(Integer, default=0)
+    minor_violations = Column(Integer, default=0)
+    notes = Column(String(1000))
+
+    outlet = relationship("Outlet")
+
+
+class IntelligencePipelineRun(Base):
+    """Persisted Franchise Intelligence Engine runs."""
+
+    __tablename__ = "intelligence_pipeline_runs"
+
+    run_id = Column(Integer, primary_key=True, index=True)
+    generated_at = Column(DateTime, nullable=False)
+    outlet_count = Column(Integer, nullable=False)
+    output_json = Column(Text, nullable=False)
+    is_latest = Column(Boolean, default=True)
+
+
+class Notification(Base):
+    """Unified alerts and workflow triggers across agents."""
+
+    __tablename__ = "notifications"
+
+    notification_id = Column(Integer, primary_key=True, index=True)
+    alert_key = Column(String(120), unique=True, index=True)
+    domain = Column(String(50), nullable=False)
+    severity = Column(String(20), nullable=False)
+    outlet_id = Column(Integer, ForeignKey("outlets.outlet_id"), nullable=True)
+    title = Column(String(255), nullable=False)
+    description = Column(String(1000))
+    status = Column(String(50), default="active")
+    source_agent = Column(String(100))
+    affected_area = Column(String(255))
+    metric = Column(String(100))
+    metric_value = Column(Numeric(12, 4))
+    threshold_value = Column(Numeric(12, 4))
+    recommendation = Column(String(1000))
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+
+    outlet = relationship("Outlet")
+    action_plans = relationship("ActionPlan", back_populates="notification", lazy="selectin")
+
+
+class ActionPlan(Base):
+    """Recommended remediation steps linked to notifications."""
+
+    __tablename__ = "action_plans"
+
+    plan_id = Column(Integer, primary_key=True, index=True)
+    notification_id = Column(Integer, ForeignKey("notifications.notification_id"), nullable=True)
+    outlet_id = Column(Integer, ForeignKey("outlets.outlet_id"), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(String(2000))
+    priority = Column(String(20), default="medium")
+    status = Column(String(50), default="open")
+    due_date = Column(Date)
+    created_at = Column(DateTime, nullable=False)
+
+    notification = relationship("Notification", back_populates="action_plans")
+    outlet = relationship("Outlet")

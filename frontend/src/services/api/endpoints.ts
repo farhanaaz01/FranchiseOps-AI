@@ -90,6 +90,26 @@ export const ENDPOINTS = {
     `/api/marketing/dashboard/campaigns/${campaignId}`,
   MARKETING_DASHBOARD_ALL_CAMPAIGNS: '/api/marketing/dashboard/campaigns',
 
+  // ---- Audit (Milestone 4) ----
+  AUDIT_INSPECTIONS: '/api/audits/inspections',
+  AUDIT_INSPECTION: (id: number) => `/api/audits/inspections/${id}`,
+  AUDIT_COMPLIANCE: '/api/audits/compliance',
+  AUDIT_DASHBOARD_SUMMARY: '/api/audit/dashboard/summary',
+  AUDIT_DASHBOARD_COMPLIANCE: '/api/audit/dashboard/compliance',
+
+  // ---- Intelligence (Milestone 4) ----
+  INTELLIGENCE_LATEST: '/api/intelligence/latest',
+  INTELLIGENCE_RUN: '/api/intelligence/run',
+  INTELLIGENCE_ROOT_CAUSES: '/api/intelligence/root-causes',
+  INTELLIGENCE_FORECASTS: '/api/intelligence/forecasts',
+
+  // ---- Executive & notifications (Milestone 4) ----
+  EXECUTIVE_SUMMARY: '/api/executive/summary',
+  NOTIFICATIONS: '/api/notifications',
+  NOTIFICATION: (id: number) => `/api/notifications/${id}`,
+  NOTIFICATIONS_SYNC: '/api/notifications/sync',
+  ACTION_PLANS: '/api/notifications/action-plans',
+
   // ---- System ----
   ROOT: '/',
 } as const;
