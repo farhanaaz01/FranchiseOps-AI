@@ -5,6 +5,8 @@ from random import Random
 from app.database import SessionLocal
 from app.models import (
     Attendance,
+    AuditComplianceRecord,
+    AuditInspection,
     CampaignPerformance,
     Employee,
     Franchise,
@@ -50,6 +52,7 @@ def seed_data():
         _seed_inventory(db, [outlet1, outlet2, outlet3, outlet4])
         _seed_workforce(db, [outlet1, outlet2, outlet3, outlet4])
         _seed_marketing(db, [outlet1, outlet2, outlet3, outlet4])
+        _seed_audit(db, [outlet1, outlet2, outlet3, outlet4])
     finally:
         db.close()
 
@@ -381,4 +384,55 @@ def _seed_campaign_performance(db, campaign, start_date, end_date, campaign_type
             revenue=revenue.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
         )
         db.add(performance)
+    db.commit()
+
+
+def _seed_audit(db, outlets):
+    today = date.today()
+    random = Random(789)
+
+    # Compliance snapshots (two per outlet) for intelligence pipeline
+    compliance_profiles = {
+        1: (92.0, 96.5, 1, 0),
+        2: (58.0, 64.0, 4, 2),
+        3: (83.0, 76.5, 2, 1),
+        4: (89.0, 81.0, 1, 2),
+    }
+
+    inspections = [
+        (1, "Health Inspector Alvarez", Decimal("96.5"), "Passed", 0, 1, "Impeccable cleanliness."),
+        (2, "Regional Auditor Novak", Decimal("64.0"), "Failed", 2, 4, "Refrigeration gasket damaged."),
+        (3, "Health Inspector Alvarez", Decimal("76.5"), "Warning", 1, 3, "Handwashing sink temp below standard."),
+        (4, "Corporate Compliance Lead Chen", Decimal("88.0"), "Passed", 0, 2, "Sanitization station restocked on site."),
+    ]
+
+    for outlet in outlets:
+        prof = compliance_profiles.get(outlet.outlet_id, (80.0, 78.0, 2, 1))
+        for offset, score, violations in (
+            (45, prof[0], prof[2]),
+            (15, prof[1], prof[3]),
+        ):
+            db.add(
+                AuditComplianceRecord(
+                    outlet_id=outlet.outlet_id,
+                    record_date=today - timedelta(days=offset),
+                    compliance_score=Decimal(str(score)),
+                    violation_count=violations,
+                )
+            )
+
+    for outlet_id, auditor, score, status, critical, minor, notes in inspections:
+        db.add(
+            AuditInspection(
+                outlet_id=outlet_id,
+                inspection_date=today - timedelta(days=random.randint(5, 25)),
+                auditor_name=auditor,
+                score=score,
+                status=status,
+                critical_violations=critical,
+                minor_violations=minor,
+                notes=notes,
+            )
+        )
+
     db.commit()

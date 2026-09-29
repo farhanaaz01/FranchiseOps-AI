@@ -5,17 +5,24 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import Base, engine
+import app.models  # noqa: F401 — register Milestone 4 tables on metadata
+from app.database import SessionLocal
 from app.routers import (
     attendance,
+    audit,
+    audit_dashboard,
     campaign_performance,
     dashboard,
     employee,
+    executive_dashboard,
     franchise,
+    intelligence,
     inventory,
     inventory_dashboard,
     inventory_transaction,
     marketing_campaign,
     marketing_dashboard,
+    notifications,
     outlet,
     product,
     sale,
@@ -29,6 +36,16 @@ from app.seed import seed_data
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     seed_data()
+    db = SessionLocal()
+    try:
+        from app.services import intelligence_service, notification_service
+
+        intelligence_service.run_pipeline(db)
+        notification_service.sync_alerts_from_agents(db)
+    except Exception:
+        pass
+    finally:
+        db.close()
     yield
 
 
@@ -63,6 +80,11 @@ app.include_router(dashboard.router)
 app.include_router(inventory_dashboard.router)
 app.include_router(workforce_dashboard.router)
 app.include_router(marketing_dashboard.router)
+app.include_router(audit.router)
+app.include_router(audit_dashboard.router)
+app.include_router(intelligence.router)
+app.include_router(executive_dashboard.router)
+app.include_router(notifications.router)
 
 
 @app.get("/")

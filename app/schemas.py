@@ -1,8 +1,8 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional, List
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class FranchiseBase(BaseModel):
@@ -432,3 +432,149 @@ class MarketingDashboardDTO(BaseModel):
     top_campaigns: List[CampaignAnalyticsDTO]
     underperforming_campaigns: List[CampaignAnalyticsDTO]
     campaigns_by_type: dict[str, int]
+
+
+# ------------------- Milestone 4: Audit -------------------
+
+
+class AuditInspectionBase(BaseModel):
+    outlet_id: int
+    inspection_date: date
+    auditor_name: str
+    score: Decimal = Field(ge=0, le=100)
+    status: str  # Passed, Warning, Failed
+    critical_violations: int = 0
+    minor_violations: int = 0
+    notes: Optional[str] = None
+
+
+class AuditInspectionCreate(AuditInspectionBase):
+    pass
+
+
+class AuditInspectionResponse(AuditInspectionBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    audit_id: int
+    outlet_name: Optional[str] = None
+
+
+class AuditComplianceRecordBase(BaseModel):
+    outlet_id: int
+    record_date: date
+    compliance_score: Decimal = Field(ge=0, le=100)
+    violation_count: int = 0
+
+
+class AuditComplianceRecordCreate(AuditComplianceRecordBase):
+    pass
+
+
+class AuditComplianceRecordResponse(AuditComplianceRecordBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    record_id: int
+    outlet_name: Optional[str] = None
+
+
+class AuditDashboardDTO(BaseModel):
+    total_inspections: int
+    average_inspection_score: Decimal
+    passed_count: int
+    warning_count: int
+    failed_count: int
+    average_compliance_score: Decimal
+    outlets_below_compliance_threshold: int
+    compliance_threshold: Decimal
+    recent_inspections: List[AuditInspectionResponse]
+    compliance_by_outlet: List[AuditComplianceRecordResponse]
+
+
+class ComplianceOutletSummaryDTO(BaseModel):
+    outlet_id: int
+    pipeline_outlet_id: str
+    outlet_name: Optional[str] = None
+    compliance_score: Decimal
+    violation_count: int
+    latest_inspection_score: Optional[Decimal] = None
+    inspection_status: Optional[str] = None
+    health_status: Optional[str] = None
+    performance_score: Optional[Decimal] = None
+
+
+# ------------------- Milestone 4: Executive -------------------
+
+
+class ExecutiveAgentSummaryDTO(BaseModel):
+    agent_name: str
+    status: str
+    key_metric: str
+    key_value: str
+    alert_count: int = 0
+
+
+class ExecutiveDashboardDTO(BaseModel):
+    generated_at: datetime
+    total_outlets: int
+    active_outlets: int
+    total_revenue: Decimal
+    average_health_score: Decimal
+    critical_outlets: int
+    at_risk_outlets: int
+    healthy_outlets: int
+    active_notifications: int
+    open_action_plans: int
+    pipeline_generated_at: Optional[datetime] = None
+    agent_summaries: List[ExecutiveAgentSummaryDTO]
+    top_priority_outlets: List[ComplianceOutletSummaryDTO]
+
+
+# ------------------- Milestone 4: Notifications -------------------
+
+
+class NotificationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    notification_id: int
+    alert_key: str
+    domain: str
+    severity: str
+    outlet_id: Optional[int] = None
+    outlet_name: Optional[str] = None
+    title: str
+    description: Optional[str] = None
+    status: str
+    source_agent: Optional[str] = None
+    affected_area: Optional[str] = None
+    metric: Optional[str] = None
+    metric_value: Optional[Decimal] = None
+    threshold_value: Optional[Decimal] = None
+    recommendation: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class NotificationStatusUpdate(BaseModel):
+    status: str  # active, acknowledged, resolved
+
+
+class ActionPlanBase(BaseModel):
+    outlet_id: int
+    title: str
+    description: Optional[str] = None
+    priority: str = "medium"
+    status: str = "open"
+    due_date: Optional[date] = None
+    notification_id: Optional[int] = None
+
+
+class ActionPlanCreate(ActionPlanBase):
+    pass
+
+
+class ActionPlanResponse(ActionPlanBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    plan_id: int
+    created_at: datetime
+    outlet_name: Optional[str] = None
