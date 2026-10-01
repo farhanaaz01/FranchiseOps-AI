@@ -336,3 +336,37 @@ export interface ScheduleResponse {
   shift_end: string | null;
   status: string | null;
 }
+
+// ----- Notifications & Workflow (Milestone 4) -----
+export interface NotificationResponse {
+  notification_id: number;
+  alert_key: string;
+  domain: string;
+  severity: string;
+  outlet_id: number | null;
+  outlet_name: string | null;
+  title: string;
+  description: string | null;
+  status: 'active' | 'acknowledged' | 'resolved';
+  source_agent: string | null;
+  affected_area: string | null;
+  metric: string | null;
+  metric_value: number | string | null;
+  threshold_value: number | string | null;
+  recommendation: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActionPlanResponse {
+  plan_id: number;
+  outlet_id: number;
+  outlet_name: string | null;
+  title: string;
+  description: string | null;
+  priority: string;
+  status: string;
+  due_date: string | null;
+  notification_id: number | null;
+  created_at: string;
+}

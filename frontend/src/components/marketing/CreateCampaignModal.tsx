@@ -7,14 +7,25 @@ interface CreateCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (campaign: MarketingCampaignCreate) => Promise<boolean>;
+  outlets?: Array<{ outlet_id: number; name: string }>;
 }
+
+const DEFAULT_OUTLET_OPTIONS = [
+  { outlet_id: 1, name: 'OUT-01: Downtown Flagship' },
+  { outlet_id: 2, name: 'OUT-02: Westside Hub' },
+  { outlet_id: 3, name: 'OUT-03: Metro Mall' },
+  { outlet_id: 4, name: 'OUT-04: Uptown Express' },
+  { outlet_id: 5, name: 'OUT-05: Airport Terminal' },
+];
 
 export const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  outlets = DEFAULT_OUTLET_OPTIONS,
 }) => {
-  const [outletId, setOutletId] = useState(1);
+  const activeOutlets = outlets.length > 0 ? outlets : DEFAULT_OUTLET_OPTIONS;
+  const [outletId, setOutletId] = useState(activeOutlets[0]?.outlet_id || 1);
   const [campaignName, setCampaignName] = useState('');
   const [channel, setChannel] = useState('Local Social Media Ads');
   const [budget, setBudget] = useState('1500');
@@ -59,11 +70,11 @@ export const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             onChange={(e) => setOutletId(Number(e.target.value))}
             className="w-full px-3 py-2 bg-[#171A20] border border-[#262B35] rounded-lg text-xs text-[#EDEFF3] focus:outline-hidden focus:border-[#6C8CFF]"
           >
-            <option value={1}>OUT-01: Downtown Flagship</option>
-            <option value={2}>OUT-02: Westside Hub</option>
-            <option value={3}>OUT-03: Metro Mall</option>
-            <option value={4}>OUT-04: Uptown Express</option>
-            <option value={5}>OUT-05: Airport Terminal</option>
+            {activeOutlets.map((o) => (
+              <option key={o.outlet_id} value={o.outlet_id}>
+                {o.name}
+              </option>
+            ))}
           </select>
         </div>
 

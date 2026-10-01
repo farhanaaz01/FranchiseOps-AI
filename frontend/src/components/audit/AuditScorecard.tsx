@@ -11,7 +11,7 @@ interface AuditScorecardProps {
 export const AuditScorecard: React.FC<AuditScorecardProps> = ({ audits }) => {
   const avgScore = audits.length
     ? (audits.reduce((acc, a) => acc + a.score, 0) / audits.length).toFixed(1)
-    : '85.0';
+    : '—';
 
   const totalViolations = audits.reduce(
     (acc, a) => acc + a.criticalViolations + a.minorViolations,

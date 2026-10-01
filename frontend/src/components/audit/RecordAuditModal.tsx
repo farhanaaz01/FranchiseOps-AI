@@ -6,16 +6,27 @@ import type { AuditRecord } from '@/services/api/auditApi';
 interface RecordAuditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (audit: Omit<AuditRecord, 'id'>) => Promise<AuditRecord>;
+  onSubmit: (audit: Omit<AuditRecord, 'id' | 'audit_id'>) => Promise<AuditRecord>;
+  outlets?: Array<{ id: string; name: string }>;
 }
+
+const DEFAULT_OUTLET_OPTIONS = [
+  { id: 'OUT-01', name: 'Downtown Flagship' },
+  { id: 'OUT-02', name: 'Westside Hub' },
+  { id: 'OUT-03', name: 'Metro Mall' },
+  { id: 'OUT-04', name: 'Uptown Express' },
+  { id: 'OUT-05', name: 'Airport Terminal' },
+];
 
 export const RecordAuditModal: React.FC<RecordAuditModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  outlets = DEFAULT_OUTLET_OPTIONS,
 }) => {
-  const [outletId, setOutletId] = useState('OUT-01');
-  const [outletName, setOutletName] = useState('Downtown Flagship');
+  const activeOutlets = outlets.length > 0 ? outlets : DEFAULT_OUTLET_OPTIONS;
+  const [outletId, setOutletId] = useState(activeOutlets[0]?.id || 'OUT-01');
+  const [outletName, setOutletName] = useState(activeOutlets[0]?.name || 'Downtown Flagship');
   const [inspectionDate, setInspectionDate] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -28,14 +39,8 @@ export const RecordAuditModal: React.FC<RecordAuditModalProps> = ({
 
   const handleOutletChange = (val: string) => {
     setOutletId(val);
-    const names: Record<string, string> = {
-      'OUT-01': 'Downtown Flagship',
-      'OUT-02': 'Westside Hub',
-      'OUT-03': 'Metro Mall',
-      'OUT-04': 'Uptown Express',
-      'OUT-05': 'Airport Terminal',
-    };
-    setOutletName(names[val] || val);
+    const found = activeOutlets.find((o) => o.id === val);
+    setOutletName(found?.name || val);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,11 +78,11 @@ export const RecordAuditModal: React.FC<RecordAuditModalProps> = ({
             onChange={(e) => handleOutletChange(e.target.value)}
             className="w-full px-3 py-2 bg-[#171A20] border border-[#262B35] rounded-lg text-xs text-[#EDEFF3] focus:outline-hidden focus:border-[#6C8CFF]"
           >
-            <option value="OUT-01">OUT-01: Downtown Flagship</option>
-            <option value="OUT-02">OUT-02: Westside Hub</option>
-            <option value="OUT-03">OUT-03: Metro Mall</option>
-            <option value="OUT-04">OUT-04: Uptown Express</option>
-            <option value="OUT-05">OUT-05: Airport Terminal</option>
+            {activeOutlets.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.id}: {o.name}
+              </option>
+            ))}
           </select>
         </div>
 

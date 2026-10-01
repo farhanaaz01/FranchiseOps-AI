@@ -1,118 +1,110 @@
 import { useState, useEffect, useCallback } from 'react';
-import { auditApi, AuditRecord, ComplianceOutletRecord } from '@/services/api/auditApi';
+import { auditApi, ComplianceOutletRecord } from '@/services/api/auditApi';
+import { apiGet, apiPost } from '@/services/api/apiClient';
 
-const FALLBACK_COMPLIANCE: ComplianceOutletRecord[] = [
-  {
-    outlet_id: 'OUT-02',
-    performance_score: 0.0,
-    health_status: 'Critical',
-    compliance_score: 57.65,
-    wastage_rate: 6.1,
-    absenteeism_rate: 1.52,
-    campaign_roi: -11.11,
-    audit_issues: [
-      {
-        domain: 'Audit', severity: 'high', metric: 'compliance_score',
-        value: 57.65, threshold: 75.0,
-        finding: 'Audit Agent: compliance 57.6 below threshold (75.0)',
-        recommendation: 'Close compliance gaps: retrain on SOPs and schedule a follow-up audit within 7 days.',
-      },
-    ],
-    priority_issue: 'Audit Agent: compliance 57.6 below threshold (75.0)',
-    overall_recommendation: 'Close compliance gaps: retrain on SOPs and schedule a follow-up audit within 7 days.',
-  },
-  {
-    outlet_id: 'OUT-05',
-    performance_score: 40.6,
-    health_status: 'Critical',
-    compliance_score: 69.75,
-    wastage_rate: 2.91,
-    absenteeism_rate: 1.31,
-    campaign_roi: 20.55,
-    audit_issues: [
-      {
-        domain: 'Audit', severity: 'high', metric: 'compliance_score',
-        value: 69.75, threshold: 75.0,
-        finding: 'Audit Agent: compliance 69.8 below threshold (75.0)',
-        recommendation: 'Close compliance gaps: retrain on SOPs and schedule a follow-up audit within 7 days.',
-      },
-    ],
-    priority_issue: 'Audit Agent: compliance 69.8 below threshold (75.0)',
-    overall_recommendation: 'Close compliance gaps: retrain on SOPs and schedule a follow-up audit within 7 days.',
-  },
-  {
-    outlet_id: 'OUT-03',
-    performance_score: 46.8,
-    health_status: 'Critical',
-    compliance_score: 76.9,
-    wastage_rate: 2.44,
-    absenteeism_rate: 1.45,
-    campaign_roi: 25.01,
-    audit_issues: [],
-    priority_issue: null,
-    overall_recommendation: 'Operations are within acceptable compliance thresholds.',
-  },
-  {
-    outlet_id: 'OUT-04',
-    performance_score: 83.8,
-    health_status: 'Healthy',
-    compliance_score: 85.3,
-    wastage_rate: 1.96,
-    absenteeism_rate: 0.50,
-    campaign_roi: 41.96,
-    audit_issues: [],
-    priority_issue: null,
-    overall_recommendation: 'No critical compliance issues detected. Continue current practices.',
-  },
-  {
-    outlet_id: 'OUT-01',
-    performance_score: 99.4,
-    health_status: 'Healthy',
-    compliance_score: 94.55,
-    wastage_rate: 1.48,
-    absenteeism_rate: 0.49,
-    campaign_roi: 65.12,
-    audit_issues: [],
-    priority_issue: null,
-    overall_recommendation: 'Excellent compliance and operational performance. Benchmark outlet.',
-  },
-];
+// Backend audit inspection record mapped from AuditInspectionResponse
+export interface AuditRecord {
+  id: string;
+  audit_id: number;
+  outletId: string;
+  outletName: string;
+  inspectionDate: string;
+  auditorName: string;
+  score: number;
+  status: 'Passed' | 'Warning' | 'Failed';
+  criticalViolations: number;
+  minorViolations: number;
+  notes: string;
+}
+
+// Backend response shape from /api/audits/inspections
+interface BackendInspection {
+  audit_id: number;
+  outlet_id: number;
+  outlet_name?: string | null;
+  inspection_date: string;
+  auditor_name: string;
+  score: string | number;
+  status: string;
+  critical_violations: number;
+  minor_violations: number;
+  notes?: string | null;
+}
+
+function mapInspection(item: BackendInspection): AuditRecord {
+  return {
+    id: `AUD-${item.audit_id}`,
+    audit_id: item.audit_id,
+    outletId: `OUT-${String(item.outlet_id).padStart(2, '0')}`,
+    outletName: item.outlet_name || `Outlet #${item.outlet_id}`,
+    inspectionDate: item.inspection_date,
+    auditorName: item.auditor_name,
+    score: typeof item.score === 'string' ? parseFloat(item.score) : item.score,
+    status: item.status as 'Passed' | 'Warning' | 'Failed',
+    criticalViolations: item.critical_violations,
+    minorViolations: item.minor_violations,
+    notes: item.notes || '',
+  };
+}
 
 export function useAudit() {
   const [audits, setAudits] = useState<AuditRecord[]>([]);
-  const [complianceRecords, setComplianceRecords] = useState<ComplianceOutletRecord[]>(FALLBACK_COMPLIANCE);
+  const [complianceRecords, setComplianceRecords] = useState<ComplianceOutletRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAudits = useCallback(async () => {
     try {
-      const [auditRes, complianceRes] = await Promise.allSettled([
-        auditApi.getAudits(),
+      const [inspectionsRes, complianceRes] = await Promise.allSettled([
+        apiGet<BackendInspection[]>('/api/audits/inspections'),
         auditApi.getComplianceFromIntelligence(),
       ]);
 
-      if (auditRes.status === 'fulfilled') {
-        setAudits(auditRes.value);
+      if (inspectionsRes.status === 'fulfilled') {
+        setAudits(inspectionsRes.value.map(mapInspection));
+      } else {
+        setAudits([]);
       }
 
       if (complianceRes.status === 'fulfilled' && complianceRes.value.length > 0) {
         setComplianceRecords(complianceRes.value);
       } else {
-        setComplianceRecords(FALLBACK_COMPLIANCE);
+        setComplianceRecords([]);
       }
 
       setError(null);
     } catch (err: any) {
-      setError(err?.message || 'Using cached audit data');
+      setError(err?.message || 'Failed to fetch audit data');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const recordAudit = async (newAudit: Omit<AuditRecord, 'id'>): Promise<AuditRecord> => {
-    const created = await auditApi.recordAudit(newAudit);
-    setAudits((prev) => [created, ...prev]);
-    return created;
+  const recordAudit = async (
+    newAudit: Omit<AuditRecord, 'id' | 'audit_id'>
+  ): Promise<AuditRecord> => {
+    // Extract numeric outlet_id from "OUT-01" format
+    const outletIdNum = parseInt(newAudit.outletId.replace(/\D/g, ''), 10) || 1;
+
+    const backendPayload = {
+      outlet_id: outletIdNum,
+      inspection_date: newAudit.inspectionDate,
+      auditor_name: newAudit.auditorName,
+      score: newAudit.score,
+      status: newAudit.status,
+      critical_violations: newAudit.criticalViolations,
+      minor_violations: newAudit.minorViolations,
+      notes: newAudit.notes || null,
+    };
+
+    const created = await apiPost<BackendInspection>(
+      '/api/audits/inspections',
+      backendPayload
+    );
+
+    const mapped = mapInspection(created);
+    setAudits((prev) => [mapped, ...prev]);
+    return mapped;
   };
 
   // Computed KPIs from compliance records

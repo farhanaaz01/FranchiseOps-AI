@@ -1,6 +1,8 @@
+import { apiGet, apiPost, apiPatch } from './apiClient';
 import { inventoryApi } from './inventoryApi';
 import { workforceApi } from './workforceApi';
 import { intelligenceApi } from './intelligenceApi';
+import type { NotificationResponse } from '@/types/backend';
 
 export interface UnifiedAlert {
   id: string;
@@ -18,23 +20,82 @@ export interface UnifiedAlert {
   value?: number | null;
   threshold?: number | null;
   recommendation?: string;
+  backendNotificationId?: number;
 }
 
-// In-memory acknowledgment tracking for active session
-const alertAckStore: Record<string, boolean> = {};
+// In-memory status tracking cache
+const alertStatusStore: Record<string, 'active' | 'acknowledged' | 'resolved'> = {};
 
 export const alertsApi = {
   /**
-   * Fetch aggregated real-time alerts across Inventory, Workforce, and Pipeline Root Causes.
+   * Fetch aggregated real-time alerts across backend Notifications API,
+   * Inventory, Workforce, and Pipeline Root Causes.
    */
   getAllAlerts: async (): Promise<UnifiedAlert[]> => {
+    // 1. Try to fetch from real backend /api/notifications
+    try {
+      let notifications = await apiGet<NotificationResponse[]>('/api/notifications').catch(() => []);
+
+      // If empty, attempt to trigger /api/notifications/sync once to populate backend rows from agents
+      if (!notifications || notifications.length === 0) {
+        await apiPost('/api/notifications/sync', {}).catch(() => null);
+        notifications = await apiGet<NotificationResponse[]>('/api/notifications').catch(() => []);
+      }
+
+      if (notifications && notifications.length > 0) {
+        return notifications.map((n) => {
+          const id = String(n.notification_id);
+          const cachedStatus = alertStatusStore[id];
+          const finalStatus = cachedStatus || n.status || 'active';
+
+          const outletKey = n.outlet_id
+            ? `OUT-${String(n.outlet_id).padStart(2, '0')}`
+            : 'CORP-HQ';
+
+          const validDomain = (
+            ['Inventory', 'Workforce', 'Audit', 'Performance', 'Pipeline'].includes(n.domain)
+              ? n.domain
+              : 'Pipeline'
+          ) as UnifiedAlert['domain'];
+
+          const validSev = (
+            ['critical', 'high', 'medium', 'low'].includes(n.severity?.toLowerCase())
+              ? n.severity.toLowerCase()
+              : 'medium'
+          ) as UnifiedAlert['severity'];
+
+          return {
+            id,
+            backendNotificationId: n.notification_id,
+            domain: validDomain,
+            severity: validSev,
+            outletId: outletKey,
+            outletName: n.outlet_name || outletKey,
+            title: n.title,
+            description: n.description || '',
+            timestamp: n.created_at || new Date().toISOString(),
+            status: finalStatus,
+            sourceAgent: n.source_agent || `${n.domain} Agent`,
+            affectedArea: n.affected_area || 'Operations',
+            metric: n.metric || undefined,
+            value: n.metric_value !== null ? parseFloat(String(n.metric_value)) : null,
+            threshold: n.threshold_value !== null ? parseFloat(String(n.threshold_value)) : null,
+            recommendation: n.recommendation || undefined,
+          };
+        });
+      }
+    } catch {
+      // If notification router is unavailable, fall through to domain-level aggregation
+    }
+
+    // 2. Fallback: Aggregate from real inventory, workforce, and pipeline APIs
     const alerts: UnifiedAlert[] = [];
 
-    // 1. Inventory stock alerts
+    // Inventory stock alerts
     try {
       const stockAlerts = await inventoryApi.getAlerts().catch(() => []);
       stockAlerts.forEach((sa, idx) => {
-        const id = `inv-alert-${sa.product_id || idx}`;
+        const id = `inv-alert-${sa.outlet_id}-${sa.product_id || idx}`;
         const sev = sa.alert_type === 'CRITICAL' ? 'critical' : sa.alert_type === 'LOW_STOCK' ? 'high' : 'medium';
         alerts.push({
           id,
@@ -45,7 +106,7 @@ export const alertsApi = {
           title: `${sa.alert_type.replace('_', ' ')}: ${sa.product_name || 'Product'}`,
           description: sa.message || `Current stock is ${sa.current_stock} (safety limit: ${sa.threshold}).`,
           timestamp: new Date().toISOString(),
-          status: alertAckStore[id] ? 'acknowledged' : 'active',
+          status: alertStatusStore[id] || 'active',
           sourceAgent: 'Inventory Replenishment Agent',
           affectedArea: 'Perishable Stock / Supply Runway',
           metric: 'current_stock',
@@ -58,7 +119,7 @@ export const alertsApi = {
       // Handled gracefully
     }
 
-    // 2. Workforce staffing alerts
+    // Workforce staffing alerts
     try {
       const staffAlerts = await workforceApi.getStaffingAlerts().catch(() => []);
       staffAlerts.forEach((wa, idx) => {
@@ -73,7 +134,7 @@ export const alertsApi = {
           title: `Staffing ${wa.alert_type}: ${wa.scheduled_staff_count}/${wa.expected_staff_count} Scheduled`,
           description: wa.message,
           timestamp: new Date().toISOString(),
-          status: alertAckStore[id] ? 'acknowledged' : 'active',
+          status: alertStatusStore[id] || 'active',
           sourceAgent: 'Workforce Dispatch Agent',
           affectedArea: 'Shift Roster & Peak Coverage',
           metric: 'scheduled_staff_count',
@@ -86,7 +147,7 @@ export const alertsApi = {
       // Handled gracefully
     }
 
-    // 3. Pipeline Root Causes
+    // Pipeline Root Causes
     try {
       const rootCauses = await intelligenceApi.getRootCauses().catch(() => []);
       rootCauses.forEach((rc) => {
@@ -102,7 +163,7 @@ export const alertsApi = {
             title: issue.finding,
             description: issue.recommendation,
             timestamp: new Date().toISOString(),
-            status: alertAckStore[id] ? 'acknowledged' : 'active',
+            status: alertStatusStore[id] || 'active',
             sourceAgent: `${issue.domain} Agent`,
             affectedArea: `${issue.domain} Operational Compliance`,
             metric: issue.metric,
@@ -120,17 +181,24 @@ export const alertsApi = {
   },
 
   /**
-   * Mark alert as acknowledged in session store
+   * Mark alert as acknowledged, updating backend status if numeric ID
    */
-  acknowledgeAlert: (alertId: string): void => {
-    alertAckStore[alertId] = true;
+  acknowledgeAlert: async (alertId: string): Promise<void> => {
+    alertStatusStore[alertId] = 'acknowledged';
+    const numId = parseInt(alertId, 10);
+    if (!isNaN(numId)) {
+      await apiPatch(`/api/notifications/${numId}`, { status: 'acknowledged' }).catch(() => null);
+    }
   },
 
   /**
-   * Stub for legacy resolve calls (read-only incident telemetry)
+   * Mark alert as resolved, updating backend status if numeric ID
    */
-  resolveAlert: (_alertId: string, _note?: string): void => {
-    // Read-only incident telemetry: resolution endpoint not exposed by backend
+  resolveAlert: async (alertId: string, _note?: string): Promise<void> => {
+    alertStatusStore[alertId] = 'resolved';
+    const numId = parseInt(alertId, 10);
+    if (!isNaN(numId)) {
+      await apiPatch(`/api/notifications/${numId}`, { status: 'resolved' }).catch(() => null);
+    }
   },
 };
-

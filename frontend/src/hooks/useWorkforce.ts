@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { workforceApi } from '@/services/api';
+import { apiPost } from '@/services/api/apiClient';
 import type {
   WorkforceDashboardDTO,
   StaffingAlertDTO,
@@ -21,61 +22,21 @@ export interface EnrichedShiftRecord {
   status: 'scheduled' | 'completed' | 'cancelled' | 'absent';
 }
 
-const FALLBACK_SUMMARY: WorkforceDashboardDTO = {
-  total_employees: 24,
-  active_employees: 19,
-  total_outlets_with_employees: 4,
-  average_attendance_rate: '59.86',
-  total_hours_worked: '4444.93',
+const EMPTY_SUMMARY: WorkforceDashboardDTO = {
+  total_employees: 0,
+  active_employees: 0,
+  total_outlets_with_employees: 0,
+  average_attendance_rate: '0.00',
+  total_hours_worked: '0.00',
   top_performers: [],
   underperformers: [],
-  staffing_alerts: [
-    {
-      outlet_id: 1, outlet_name: 'BK Downtown',
-      alert_type: 'SHORTAGE', scheduled_staff_count: 0,
-      expected_staff_count: 3, message: 'Only 0 staff scheduled for upcoming days; expected 3',
-    },
-  ],
+  staffing_alerts: [],
 };
 
-const FALLBACK_ALERTS: StaffingAlertDTO[] = [
-  {
-    outlet_id: 1, outlet_name: 'BK Downtown', alert_type: 'SHORTAGE',
-    scheduled_staff_count: 0, expected_staff_count: 3,
-    message: 'Only 0 staff scheduled on upcoming days; expected 3',
-  },
-  {
-    outlet_id: 2, outlet_name: 'BK Mall', alert_type: 'SHORTAGE',
-    scheduled_staff_count: 0, expected_staff_count: 4,
-    message: 'Only 0 staff scheduled on upcoming days; expected 4',
-  },
-];
-
-const FALLBACK_SHIFTS: EnrichedShiftRecord[] = [
-  {
-    id: 'SH-1', employee_id: 1, employeeName: 'Priya Patel', outlet_id: 1,
-    outletName: 'BK Downtown', role: 'Manager',
-    shiftDate: '2026-09-19', shift_start: '09:00', shift_end: '17:00',
-    shiftHours: '09:00 - 17:00', status: 'scheduled',
-  },
-  {
-    id: 'SH-2', employee_id: 2, employeeName: 'Rahul Kumar', outlet_id: 1,
-    outletName: 'BK Downtown', role: 'Chef',
-    shiftDate: '2026-09-19', shift_start: '10:00', shift_end: '20:00',
-    shiftHours: '10:00 - 20:00', status: 'completed',
-  },
-  {
-    id: 'SH-3', employee_id: 9, employeeName: 'Neha Verma', outlet_id: 2,
-    outletName: 'BK Mall', role: 'Cashier',
-    shiftDate: '2026-09-18', shift_start: '08:00', shift_end: '16:00',
-    shiftHours: '08:00 - 16:00', status: 'absent',
-  },
-];
-
 export function useWorkforce(pollingIntervalMs = 30000) {
-  const [summary, setSummary] = useState<WorkforceDashboardDTO>(FALLBACK_SUMMARY);
-  const [alerts, setAlerts] = useState<StaffingAlertDTO[]>(FALLBACK_ALERTS);
-  const [shifts, setShifts] = useState<EnrichedShiftRecord[]>(FALLBACK_SHIFTS);
+  const [summary, setSummary] = useState<WorkforceDashboardDTO>(EMPTY_SUMMARY);
+  const [alerts, setAlerts] = useState<StaffingAlertDTO[]>([]);
+  const [shifts, setShifts] = useState<EnrichedShiftRecord[]>([]);
   const [employees, setEmployees] = useState<EmployeeResponse[]>([]);
   const [rawSchedules, setRawSchedules] = useState<ScheduleResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -90,17 +51,12 @@ export function useWorkforce(pollingIntervalMs = 30000) {
         workforceApi.getSchedules(),
       ]);
 
-      if (sumRes.status === 'fulfilled' && sumRes.value.total_employees > 0) {
-        setSummary(sumRes.value);
-      } else {
-        setSummary(FALLBACK_SUMMARY);
-      }
-
-      if (alertRes.status === 'fulfilled' && alertRes.value.length > 0) {
-        setAlerts(alertRes.value);
-      } else {
-        setAlerts(FALLBACK_ALERTS);
-      }
+      setSummary(
+        sumRes.status === 'fulfilled' ? sumRes.value : EMPTY_SUMMARY
+      );
+      setAlerts(
+        alertRes.status === 'fulfilled' ? alertRes.value : []
+      );
 
       const empList: EmployeeResponse[] =
         empRes.status === 'fulfilled' ? empRes.value : [];
@@ -110,8 +66,8 @@ export function useWorkforce(pollingIntervalMs = 30000) {
         schedRes.status === 'fulfilled' ? schedRes.value : [];
       setRawSchedules(schedList);
 
-      // Build enriched shift records from schedules + employees
-      if (schedList.length > 0 && empList.length > 0) {
+      // Build enriched shift records from real schedules + employees
+      if (schedList.length > 0) {
         const empMap = new Map<number, EmployeeResponse>();
         empList.forEach((e) => empMap.set(e.employee_id, e));
 
@@ -138,13 +94,20 @@ export function useWorkforce(pollingIntervalMs = 30000) {
           };
         });
         setShifts(enriched);
-      } else if (schedList.length === 0 && empList.length === 0) {
-        setShifts(FALLBACK_SHIFTS);
+      } else {
+        setShifts([]);
       }
 
-      setError(null);
+      const anyFulfilled = [sumRes, alertRes, empRes, schedRes].some(
+        (r) => r.status === 'fulfilled'
+      );
+      if (!anyFulfilled) {
+        setError('Failed to fetch workforce data from backend.');
+      } else {
+        setError(null);
+      }
     } catch (err: any) {
-      setError(err?.message || 'Using cached workforce data');
+      setError(err?.message || 'Failed to fetch workforce data');
     } finally {
       setLoading(false);
     }
@@ -158,21 +121,20 @@ export function useWorkforce(pollingIntervalMs = 30000) {
     end_time: string;
     role?: string | null;
   }): Promise<boolean> => {
-    const newShift: EnrichedShiftRecord = {
-      id: `SH-${Math.floor(1000 + Math.random() * 9000)}`,
-      employee_id: payload.employee_id,
-      employeeName: `Employee #${payload.employee_id}`,
-      outlet_id: payload.outlet_id,
-      outletName: `Outlet #${payload.outlet_id}`,
-      role: payload.role || 'Staff',
-      shiftDate: payload.shift_date,
-      shift_start: payload.start_time,
-      shift_end: payload.end_time,
-      shiftHours: `${payload.start_time} - ${payload.end_time}`,
-      status: 'scheduled',
-    };
-    setShifts((prev) => [newShift, ...prev]);
-    return true;
+    try {
+      await apiPost('/api/schedules', {
+        employee_id: payload.employee_id,
+        schedule_date: payload.shift_date,
+        shift_start: payload.start_time,
+        shift_end: payload.end_time,
+        status: 'SCHEDULED',
+      });
+      await fetchWorkforce();
+      return true;
+    } catch (err: any) {
+      setError(err?.message || 'Failed to schedule shift');
+      return false;
+    }
   };
 
   useEffect(() => {

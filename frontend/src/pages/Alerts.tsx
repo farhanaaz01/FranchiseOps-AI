@@ -9,7 +9,7 @@ import { AlertsFeed, AlertDetailModal } from '@/components/alerts';
 import type { UnifiedAlert } from '@/services/api/alertsApi';
 
 export const Alerts: React.FC = () => {
-  const { alerts, loading, refresh, acknowledgeAlert } = useAlerts();
+  const { alerts, loading, refresh, acknowledgeAlert, resolveAlert } = useAlerts();
   const [selectedAlert, setSelectedAlert] = useState<UnifiedAlert | null>(null);
 
   const criticalCount = useMemo(
@@ -101,6 +101,7 @@ export const Alerts: React.FC = () => {
         onClose={() => setSelectedAlert(null)}
         alert={selectedAlert}
         onAcknowledge={acknowledgeAlert}
+        onResolve={resolveAlert}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Megaphone, TrendingUp, DollarSign, Target, Plus, RefreshCw } from 'lucide-react';
 import { useMarketing } from '@/hooks/useMarketing';
+import { useOutlets } from '@/hooks/useOutlets';
 import { CampaignCard, CampaignsTable, CreateCampaignModal } from '@/components/marketing';
 import { CampaignDetailModal } from '@/components/marketing/CampaignDetailModal';
 import { ROIRankingChart, CampaignTypePie, BudgetRevenueChart } from '@/components/marketing/MarketingCharts';
@@ -14,6 +15,7 @@ import type { CampaignAnalyticsDTO } from '@/types';
 
 export const Marketing: React.FC = () => {
   const { summary, campaigns, loading, refresh, createCampaign } = useMarketing();
+  const { outlets } = useOutlets();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailCampaign, setDetailCampaign] = useState<CampaignAnalyticsDTO | null>(null);
 
@@ -117,6 +119,7 @@ export const Marketing: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={createCampaign}
+        outlets={outlets.map((o) => ({ outlet_id: o.outlet_id, name: `${o.id}: ${o.name}` }))}
       />
 
       {/* Campaign Detail Modal */}

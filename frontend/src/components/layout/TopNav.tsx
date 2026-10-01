@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/utils/cn';
 import {
   Menu,
@@ -14,6 +14,7 @@ import { NotificationDrawer } from './NotificationDrawer';
 import { SystemHealthModal } from './SystemHealthModal';
 import { useSystemHealth } from '@/hooks/useSystemHealth';
 import { useAlerts } from '@/hooks/useAlerts';
+import { useOutlets } from '@/hooks/useOutlets';
 
 interface TopNavProps {
   onOpenMobileMenu: () => void;
@@ -21,7 +22,7 @@ interface TopNavProps {
   onSelectOutlet?: (outletId: string) => void;
 }
 
-const OUTLETS = [
+const DEFAULT_OUTLETS = [
   { id: 'all', name: 'All Outlets (Network)' },
   { id: 'OUT-01', name: 'OUT-01 • Downtown Flagship' },
   { id: 'OUT-02', name: 'OUT-02 • Westside Hub' },
@@ -44,6 +45,15 @@ export const TopNav: React.FC<TopNavProps> = ({
 
   const { overallStatus, latencyMs, refetch: refetchHealth } = useSystemHealth();
   const { alerts, acknowledgeAlert, refresh: refetchAlerts } = useAlerts();
+  const { outlets } = useOutlets();
+
+  const outletOptions = useMemo(() => {
+    if (!outlets || outlets.length === 0) return DEFAULT_OUTLETS;
+    return [
+      { id: 'all', name: 'All Outlets (Network)' },
+      ...outlets.map((o) => ({ id: o.id, name: `${o.id} • ${o.name}` })),
+    ];
+  }, [outlets]);
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -81,7 +91,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   const criticalCount = activeAlerts.filter((a) => a.severity === 'critical').length;
   const unreadCount = activeAlerts.length;
 
-  const selectedOutletName = OUTLETS.find((o) => o.id === currentOutlet)?.name ?? 'All Outlets';
+  const selectedOutletName = outletOptions.find((o) => o.id === currentOutlet)?.name ?? 'All Outlets';
 
   return (
     <>
@@ -138,7 +148,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                     Select Scope
                   </div>
                   <div className="py-1">
-                    {OUTLETS.map((outlet) => (
+                    {outletOptions.map((outlet) => (
                       <button
                         key={outlet.id}
                         onClick={() => handleSelectOutlet(outlet.id)}

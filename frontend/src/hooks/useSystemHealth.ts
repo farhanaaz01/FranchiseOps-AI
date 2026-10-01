@@ -24,7 +24,7 @@ export function useSystemHealth(): SystemHealthInfo {
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [checking, setChecking] = useState<boolean>(false);
 
-  const apiBaseUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+  const apiBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000';
 
   const checkGateway = useCallback(async () => {
     setChecking(true);

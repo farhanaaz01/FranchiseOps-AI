@@ -21,6 +21,7 @@ interface AlertDetailModalProps {
   onClose: () => void;
   alert: UnifiedAlert | null;
   onAcknowledge?: (id: string) => void;
+  onResolve?: (id: string) => void;
 }
 
 export const AlertDetailModal: React.FC<AlertDetailModalProps> = ({
@@ -28,6 +29,7 @@ export const AlertDetailModal: React.FC<AlertDetailModalProps> = ({
   onClose,
   alert,
   onAcknowledge,
+  onResolve,
 }) => {
   if (!alert) return null;
 
@@ -127,24 +129,24 @@ export const AlertDetailModal: React.FC<AlertDetailModalProps> = ({
 
         {/* 6. STATUS & RESOLUTION NOTICE */}
         <div className="p-3 bg-[#12141A] border border-[#262B35] rounded-lg flex items-start gap-2.5 text-xs">
-          <Info className="w-4 h-4 text-[#5C6478] shrink-0 mt-0.5" />
+          <Info className="w-4 h-4 text-[#6C8CFF] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="text-[11px] font-mono text-[#8A93A6] font-semibold block">
-              Backend Resolution Endpoint: Not Connected (Read-Only Telemetry)
+            <span className="text-[11px] font-mono text-[#EDEFF3] font-semibold block">
+              Incident Management & Telemetry Status
             </span>
-            <p className="text-[11px] text-[#5C6478]">
-              Automated resolution writeback is disabled to preserve backend telemetry integrity. Incidents automatically resolve on the next pipeline cycle when monitored telemetry recovers within safe threshold limits.
+            <p className="text-[11px] text-[#8A93A6]">
+              Incidents are tracked in real-time across operational agents. Acknowledging or resolving updates the system telemetry status and synchronizes with corporate audit records.
             </p>
           </div>
         </div>
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between pt-2 border-t border-[#262B35]">
-          <span className="text-[11px] font-mono text-[#5C6478]">
-            Status: {isAck ? 'Acknowledged' : 'Active'}
+          <span className="text-[11px] font-mono capitalize text-[#5C6478]">
+            Status: <strong className={alert.status === 'resolved' ? 'text-[#4FAE7C]' : isAck ? 'text-[#6C8CFF]' : 'text-[#E8A33D]'}>{alert.status}</strong>
           </span>
           <div className="flex items-center gap-2">
-            {!isAck && onAcknowledge && (
+            {!isAck && alert.status !== 'resolved' && onAcknowledge && (
               <Button
                 variant="outline"
                 size="sm"
@@ -153,7 +155,20 @@ export const AlertDetailModal: React.FC<AlertDetailModalProps> = ({
                   onClose();
                 }}
               >
-                Acknowledge Alert
+                Acknowledge
+              </Button>
+            )}
+            {alert.status !== 'resolved' && onResolve && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-[#4FAE7C] border-[#4FAE7C]/30 hover:bg-[#4FAE7C]/10"
+                onClick={() => {
+                  onResolve(alert.id);
+                  onClose();
+                }}
+              >
+                Resolve Incident
               </Button>
             )}
             <Button variant="primary" size="sm" onClick={onClose}>

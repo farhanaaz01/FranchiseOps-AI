@@ -29,10 +29,10 @@ export const ENDPOINTS = {
   INVENTORY_BY_OUTLET: (outletId: number) => `/api/inventory/outlet/${outletId}`,
 
   // Inventory Transactions
-  INVENTORY_TRANSACTIONS: '/api/inventory_transactions',
-  INVENTORY_TRANSACTION: (id: number) => `/api/inventory_transactions/${id}`,
+  INVENTORY_TRANSACTIONS: '/api/inventory-transactions',
+  INVENTORY_TRANSACTION: (id: number) => `/api/inventory-transactions/${id}`,
   INVENTORY_TRANSACTIONS_BY_INVENTORY: (inventoryId: number) =>
-    `/api/inventory_transactions/inventory/${inventoryId}`,
+    `/api/inventory-transactions/inventory/${inventoryId}`,
 
   // Employees
   EMPLOYEES: '/api/employees',
@@ -50,16 +50,16 @@ export const ENDPOINTS = {
   SCHEDULES_BY_EMPLOYEE: (employeeId: number) => `/api/schedules/employee/${employeeId}`,
 
   // Marketing Campaigns
-  MARKETING_CAMPAIGNS: '/api/marketing/campaigns',
-  MARKETING_CAMPAIGN: (id: number) => `/api/marketing/campaigns/${id}`,
+  MARKETING_CAMPAIGNS: '/api/marketing-campaigns',
+  MARKETING_CAMPAIGN: (id: number) => `/api/marketing-campaigns/${id}`,
   MARKETING_CAMPAIGNS_BY_OUTLET: (outletId: number) =>
-    `/api/marketing/campaigns/outlet/${outletId}`,
+    `/api/marketing-campaigns/outlet/${outletId}`,
 
   // Campaign Performance
-  CAMPAIGN_PERFORMANCE: '/api/campaign_performance',
-  CAMPAIGN_PERFORMANCE_RECORD: (id: number) => `/api/campaign_performance/${id}`,
+  CAMPAIGN_PERFORMANCE: '/api/campaign-performances',
+  CAMPAIGN_PERFORMANCE_RECORD: (id: number) => `/api/campaign-performances/${id}`,
   CAMPAIGN_PERFORMANCE_BY_CAMPAIGN: (campaignId: number) =>
-    `/api/campaign_performance/campaign/${campaignId}`,
+    `/api/campaign-performances/campaign/${campaignId}`,
 
   // ---- Dashboard Analytics ----
   DASHBOARD_SUMMARY: '/api/dashboard/summary',

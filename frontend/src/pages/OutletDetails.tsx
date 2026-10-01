@@ -38,10 +38,10 @@ export const OutletDetails: React.FC = () => {
   const isCritical = outlet?.status === 'Critical' || rootCause?.health_status === 'Critical';
   const isWarning = outlet?.status === 'At Risk' || rootCause?.health_status === 'At Risk';
 
-  const dailyRev = kpi ? `$${Math.round(kpi.avg_daily_revenue).toLocaleString()}` : outlet?.revenue || '$4,870';
-  const wastage = kpi ? `${kpi.wastage_rate.toFixed(1)}%` : '2.1%';
-  const absenteeism = kpi ? `${kpi.absenteeism_rate.toFixed(1)}%` : '4.5%';
-  const compliance = kpi ? `${Math.round(kpi.compliance_score)}%` : '92%';
+  const dailyRev = kpi ? `$${Math.round(kpi.avg_daily_revenue).toLocaleString()}` : outlet?.revenue || '—';
+  const wastage = kpi ? `${kpi.wastage_rate.toFixed(1)}%` : '—';
+  const absenteeism = kpi ? `${kpi.absenteeism_rate.toFixed(1)}%` : '—';
+  const compliance = kpi ? `${Math.round(kpi.compliance_score)}%` : '—';
 
   const hasUnderperformance = rootCause && (rootCause.issues.length > 0 || isCritical || isWarning);
 
@@ -50,7 +50,7 @@ export const OutletDetails: React.FC = () => {
     const fc = pipelineData.forecasts?.find((f) => f.outlet_id === formattedId);
     if (!fc || !fc.forecasts || fc.forecasts.length === 0) return undefined;
 
-    const actualDailyRev = kpi?.avg_daily_revenue || 5000;
+    const actualDailyRev = kpi?.avg_daily_revenue || 0;
     return fc.forecasts.map((pt) => ({
       date: pt.forecast_date,
       actual: Math.round(actualDailyRev),
@@ -64,23 +64,24 @@ export const OutletDetails: React.FC = () => {
     const comps = perf?.components;
     if (comps) {
       return [
-        { name: 'Revenue Volume (35%)', score: Math.round(comps.revenue ?? 85) },
-        { name: 'Revenue Growth (15%)', score: Math.round(comps.growth ?? 78) },
-        { name: 'Wastage Control (15%)', score: Math.round(comps.wastage ?? 80) },
-        { name: 'Staff Attendance (15%)', score: Math.round(comps.absenteeism ?? 85) },
-        { name: 'Audit Compliance (10%)', score: Math.round(comps.compliance ?? 90) },
-        { name: 'Marketing ROI (10%)', score: Math.round(comps.roi ?? 80) },
+        { name: 'Revenue Volume (35%)', score: Math.round(comps.revenue ?? 0) },
+        { name: 'Revenue Growth (15%)', score: Math.round(comps.growth ?? 0) },
+        { name: 'Wastage Control (15%)', score: Math.round(comps.wastage ?? 0) },
+        { name: 'Staff Attendance (15%)', score: Math.round(comps.absenteeism ?? 0) },
+        { name: 'Audit Compliance (10%)', score: Math.round(comps.compliance ?? 0) },
+        { name: 'Marketing ROI (10%)', score: Math.round(comps.roi ?? 0) },
       ];
     }
+    const baseScore = outlet?.healthScore ?? 0;
     return [
-      { name: 'Revenue Volume (35%)', score: Math.round(outlet?.healthScore ? outlet.healthScore * 0.95 : 85) },
-      { name: 'Revenue Growth (15%)', score: Math.round(outlet?.healthScore ? outlet.healthScore * 0.88 : 78) },
-      { name: 'Wastage Control (15%)', score: isCritical ? 42 : 86 },
-      { name: 'Staff Attendance (15%)', score: isCritical ? 38 : 94 },
-      { name: 'Audit Compliance (10%)', score: Math.round(parseFloat(compliance) || 90) },
-      { name: 'Marketing ROI (10%)', score: isCritical ? 52 : 82 },
+      { name: 'Revenue Volume (35%)', score: Math.round(baseScore * 0.95) },
+      { name: 'Revenue Growth (15%)', score: Math.round(baseScore * 0.88) },
+      { name: 'Wastage Control (15%)', score: baseScore },
+      { name: 'Staff Attendance (15%)', score: baseScore },
+      { name: 'Audit Compliance (10%)', score: Math.round(parseFloat(compliance) || baseScore) },
+      { name: 'Marketing ROI (10%)', score: baseScore },
     ];
-  }, [pipelineData.performance_scores, formattedId, outlet, isCritical, compliance]);
+  }, [pipelineData.performance_scores, formattedId, outlet, compliance]);
 
   return (
     <div className="space-y-6">
@@ -98,7 +99,7 @@ export const OutletDetails: React.FC = () => {
 
         <PageHeader
           title={`Outlet Diagnostics: ${outlet?.name || formattedId}`}
-          subtitle={`Location: ${outlet?.location || 'New York, NY'} • General Manager: ${outlet?.manager || 'Sarah Jenkins'}`}
+          subtitle={`Location: ${outlet?.location || '—'} • General Manager: ${outlet?.manager || 'Unassigned'}`}
           badge={
             <StatusBadge
               status={isCritical ? 'Critical' : isWarning ? 'At Risk' : 'Healthy'}
@@ -133,7 +134,7 @@ export const OutletDetails: React.FC = () => {
         <KPICard
           title="Daily Revenue"
           value={dailyRev}
-          change={kpi ? parseFloat(kpi.revenue_growth_pct.toFixed(1)) : 6.8}
+          change={kpi ? parseFloat(kpi.revenue_growth_pct.toFixed(1)) : undefined}
           changeType={kpi && kpi.revenue_growth_pct < 0 ? 'negative' : 'positive'}
           status={isCritical ? 'critical' : 'healthy'}
           icon={<DollarSign className="w-4 h-4 text-[#6C8CFF]" />}

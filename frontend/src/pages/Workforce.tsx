@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Users, Bot, Plus, RefreshCw, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useWorkforce } from '@/hooks/useWorkforce';
+import { useOutlets } from '@/hooks/useOutlets';
 import {
   StaffingSummaryCards,
   StaffingAlertsList,
@@ -14,7 +15,8 @@ import {
 import { ShiftStatusChart, AttendanceRateChart } from '@/components/workforce/WorkforceCharts';
 
 export const Workforce: React.FC = () => {
-  const { summary, alerts, shifts, loading, refresh, scheduleShift } = useWorkforce();
+  const { summary, alerts, shifts, employees, loading, refresh, scheduleShift } = useWorkforce();
+  const { outlets } = useOutlets();
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [rebalanced, setRebalanced] = useState(false);
 
@@ -129,6 +131,8 @@ export const Workforce: React.FC = () => {
         isOpen={isScheduleOpen}
         onClose={() => setIsScheduleOpen(false)}
         onSubmit={scheduleShift}
+        employees={employees}
+        outlets={outlets.map((o) => ({ outlet_id: o.outlet_id, name: `${o.id}: ${o.name}` }))}
       />
     </div>
   );

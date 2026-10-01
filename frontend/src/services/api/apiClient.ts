@@ -124,6 +124,11 @@ export function apiPut<T>(path: string, body: unknown, options?: RequestOptions)
   return request<T>(path, 'PUT', body, options);
 }
 
+/** HTTP PATCH — partially update a resource on the backend */
+export function apiPatch<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
+  return request<T>(path, 'PATCH', body, options);
+}
+
 /** HTTP DELETE — remove a resource on the backend */
 export function apiDelete<T = void>(path: string, options?: RequestOptions): Promise<T> {
   return request<T>(path, 'DELETE', undefined, options);

@@ -36,8 +36,18 @@ export const Overview: React.FC = () => {
     refreshSummary();
   };
 
-  const revenueNum = parseFloat(summary.total_revenue) || 148520;
+  const revenueNum = summary ? parseFloat(summary.total_revenue) : 0;
   const criticalCount = alerts.filter((a) => a.severity === 'critical' && a.status !== 'resolved').length;
+  const atRiskCount = alerts.filter((a) => a.severity === 'high' && a.status !== 'resolved').length;
+
+  // Derive live KPI values from real pipeline data
+  const avgHealthScore = summary ? summary.average_health_score : (pipelineData.performance_scores.length > 0
+    ? (pipelineData.performance_scores.reduce((s, p) => s + p.performance_score, 0) / pipelineData.performance_scores.length).toFixed(1)
+    : '—');
+  const avgWastageRate = pipelineData.kpis.length > 0
+    ? (pipelineData.kpis.reduce((s, k) => s + k.wastage_rate, 0) / pipelineData.kpis.length).toFixed(1)
+    : '—';
+  const underperformingCount = summary ? summary.underperforming_outlets : pipelineData.performance_scores.filter(p => p.health_status !== 'Healthy').length;
 
   // Aggregate 7-day revenue forecast across all outlets from XGBoost pipeline output
   const networkTrendData = useMemo(() => {
@@ -54,7 +64,7 @@ export const Overview: React.FC = () => {
     const dates = Array.from(dayMap.keys()).sort();
     if (dates.length === 0) return undefined;
 
-    const totalCohortDailyRevenue = pipelineData.kpis?.reduce((acc, k) => acc + k.avg_daily_revenue, 0) || 28760;
+    const totalCohortDailyRevenue = pipelineData.kpis?.reduce((acc, k) => acc + k.avg_daily_revenue, 0) || 0;
 
     return dates.map((date) => {
       const forecastVal = Math.round(dayMap.get(date) || 0);
@@ -107,36 +117,30 @@ export const Overview: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Network Revenue"
-          value={formatCurrency(revenueNum)}
-          change={8.4}
-          changeType="positive"
-          changeLabel="vs last week"
-          status="healthy"
+          value={revenueNum > 0 ? formatCurrency(revenueNum) : '—'}
+          changeLabel="from backend"
+          status={revenueNum > 0 ? 'healthy' : 'neutral'}
           icon={<DollarSign className="w-4 h-4 text-[#6C8CFF]" />}
         />
         <KPICard
           title="Avg Health Score"
-          value={summary.average_health_score || '76.8'}
-          change={2.1}
-          changeType="positive"
-          changeLabel="pts vs 30d avg"
-          status="healthy"
+          value={String(avgHealthScore)}
+          changeLabel="pipeline computed"
+          status={parseFloat(String(avgHealthScore)) >= 70 ? 'healthy' : parseFloat(String(avgHealthScore)) >= 50 ? 'risk' : 'critical'}
           icon={<Activity className="w-4 h-4 text-[#4FAE7C]" />}
         />
         <KPICard
           title="Avg Wastage Rate"
-          value="2.4%"
-          change={-0.6}
-          changeType="positive"
-          changeLabel="improvement"
-          status="healthy"
+          value={avgWastageRate !== '—' ? `${avgWastageRate}%` : '—'}
+          changeLabel="pipeline computed"
+          status={parseFloat(String(avgWastageRate)) <= 3 ? 'healthy' : 'critical'}
           icon={<TrendingDown className="w-4 h-4 text-[#4FAE7C]" />}
         />
         <KPICard
           title="Outlets Requiring Action"
-          value={String(summary.underperforming_outlets || 2)}
-          subtext={`${criticalCount} Critical • 1 At Risk`}
-          status={summary.underperforming_outlets > 0 ? 'critical' : 'healthy'}
+          value={String(underperformingCount)}
+          subtext={`${criticalCount} Critical • ${atRiskCount} At Risk`}
+          status={underperformingCount > 0 ? 'critical' : 'healthy'}
           icon={<AlertTriangle className="w-4 h-4 text-[#D0555A]" />}
           onClick={() => navigate('/alerts')}
         />
@@ -197,7 +201,7 @@ export const Overview: React.FC = () => {
                         {outlet.name}
                       </div>
                       <div className="text-[11px] text-[#5C6478] font-mono">
-                        {outlet.id} • Rev: {outlet.revenue} • Mgr: {outlet.manager}
+                        {outlet.id} • Rev: {outlet.revenue} • {outlet.location}
                       </div>
                     </div>
                   </div>
@@ -267,33 +271,23 @@ export const Overview: React.FC = () => {
               <Badge variant="neutral" size="sm">Live</Badge>
             </CardHeader>
             <div className="divide-y divide-[#262B35] text-xs">
-              <div className="p-3.5 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#EDEFF3]">PO #4192 Created</span>
-                  <span className="text-[10px] text-[#5C6478] font-mono">12m ago</span>
+              {alerts.length > 0 ? (
+                alerts.slice(0, 3).map((a) => (
+                  <div key={a.id} className="p-3.5 space-y-1 cursor-pointer hover:bg-[#1D212A]/50 transition-colors" onClick={() => navigate('/alerts')}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-[#EDEFF3] truncate max-w-[180px]">{a.title}</span>
+                      <span className="text-[10px] text-[#6C8CFF] font-mono shrink-0">{a.outletId}</span>
+                    </div>
+                    <p className="text-[#8A93A6] text-[11px] line-clamp-2">
+                      {a.description}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-xs text-[#5C6478]">
+                  Autonomous domain agents actively monitoring network telemetry.
                 </div>
-                <p className="text-[#8A93A6] text-[11px]">
-                  Inventory Agent generated purchase order for OUT-03 milk supplier.
-                </p>
-              </div>
-              <div className="p-3.5 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#EDEFF3]">Shift Rebalanced</span>
-                  <span className="text-[10px] text-[#5C6478] font-mono">45m ago</span>
-                </div>
-                <p className="text-[#8A93A6] text-[11px]">
-                  Workforce Agent reassigned 2 floater staff to OUT-05.
-                </p>
-              </div>
-              <div className="p-3.5 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#EDEFF3]">Audit Check Passed</span>
-                  <span className="text-[10px] text-[#5C6478] font-mono">2h ago</span>
-                </div>
-                <p className="text-[#8A93A6] text-[11px]">
-                  HACCP temperature log verified for Downtown Flagship.
-                </p>
-              </div>
+              )}
             </div>
           </Card>
         </div>

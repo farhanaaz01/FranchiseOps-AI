@@ -9,6 +9,7 @@ import {
   RefreshCw, Plus, ClipboardList,
 } from 'lucide-react';
 import { useAudit } from '@/hooks/useAudit';
+import { useOutlets } from '@/hooks/useOutlets';
 import { AuditScorecard, RecordAuditModal } from '@/components/audit';
 import { ComplianceBarChart, WastageRateChart } from '@/components/audit/AuditCharts';
 import { ComplianceTable } from '@/components/audit/ComplianceTable';
@@ -26,6 +27,7 @@ export const Audit: React.FC = () => {
     criticalOutlets,
     outletsBelowThreshold,
   } = useAudit();
+  const { outlets } = useOutlets();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const complianceStatus = avgComplianceScore >= 80 ? 'healthy' : avgComplianceScore >= 65 ? 'risk' : 'critical';
@@ -120,6 +122,7 @@ export const Audit: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={recordAudit}
+        outlets={outlets}
       />
     </div>
   );
